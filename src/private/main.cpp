@@ -14,6 +14,7 @@
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
@@ -202,10 +203,10 @@ private:
 	VkPipeline graphicsPipeline = nullptr;
 	std::vector<VkFramebuffer> swapChainFramebuffers{};
 	VkCommandPool commandPool = nullptr;
-	VkCommandBuffer commandBuffer = nullptr;
-	VkSemaphore imageAvailableSemaphore = nullptr;
-	VkSemaphore renderFinishedSemaphore = nullptr;
-	VkFence inFlightFence = nullptr;
+	std::vector<VkCommandBuffer> commandBuffers{};
+	std::vector<VkSemaphore> imageAvailableSemaphores{};
+	std::vector<VkSemaphore> renderFinishedSemaphores{};
+	std::vector<VkFence> inFlightFences{};
 
 	void initWindow()
 	{
@@ -229,7 +230,7 @@ private:
 		this->createGraphicsPipeline();
 		this->createFrameBuffers();
 		this->createCommandPool();
-		this->createCommandBuffer();
+		this->createCommandBuffers();
 		this->createSyncObjects();
 	}
 
@@ -301,12 +302,13 @@ private:
 
 	void cleanup()
 	{
-		vkDestroySemaphore(this->logicalDevice, this->imageAvailableSemaphore, nullptr);
-
-		vkDestroySemaphore(this->logicalDevice, this->renderFinishedSemaphore, nullptr);
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vkDestroySemaphore(this->logicalDevice, this->imageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(this->logicalDevice, this->renderFinishedSemaphores[i], nullptr);
+			vkDestroyFence(this->logicalDevice, this->inFlightFences[i], nullptr);
+		}
 		
-		vkDestroyFence(this->logicalDevice, this->inFlightFence, nullptr);
-
 		vkDestroyCommandPool(this->logicalDevice, this->commandPool, nullptr);
 
 		for (auto framebuffer : this->swapChainFramebuffers) 
@@ -979,17 +981,19 @@ private:
 		}
 	}
 
-	void createCommandBuffer()
+	void createCommandBuffers()
 	{
+		this->commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = commandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = 1;
+		allocInfo.commandBufferCount = (uint32_t)this->commandBuffers.size();
 
-		if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo, &this->commandBuffer) != VK_SUCCESS) 
+		if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) 
 		{
-			throw std::runtime_error("failed to allocate command buffers!");
+			throw std::runtime_error("Failed to allocate command buffers!");
 		}
 	}
 
@@ -1089,6 +1093,10 @@ private:
 
 	void createSyncObjects()
 	{
+		this->imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		this->renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		this->inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -1096,12 +1104,16 @@ private:
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		if (vkCreateSemaphore(this->logicalDevice, &semaphoreInfo, nullptr, &this->imageAvailableSemaphore) != VK_SUCCESS ||
-			vkCreateSemaphore(this->logicalDevice, &semaphoreInfo, nullptr, &this->renderFinishedSemaphore) != VK_SUCCESS ||
-			vkCreateFence(this->logicalDevice, &fenceInfo, nullptr, &this->inFlightFence) != VK_SUCCESS) 
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			throw std::runtime_error("Failed to create semaphores!");
+			if (vkCreateSemaphore(this->logicalDevice, &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
+				vkCreateSemaphore(this->logicalDevice, &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
+				vkCreateFence(this->logicalDevice, &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to create semaphores!");
+			}
 		}
+		
 	}
 
 	VkShaderModule createShaderModule(const std::vector<char>& code)
