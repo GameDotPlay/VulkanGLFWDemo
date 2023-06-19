@@ -9,4 +9,8 @@ This demo is created by following the tutorial at [Vulkan Tutorial](https://vulk
 - [GLFW 64-bit Windows Binaries](https://www.glfw.org/download.html)
 - [GLM](https://github.com/g-truc/glm)
 
-In the project properties, set the `C++->General->Additional Include Directories` and the `Linker->General->Additional Library Directories` accordingly.
+In the project properties, set the `C++->General->Additional Include Directories` and the `Linker->General->Additional Library Directories` accordingly:
+
+![Set the project properties->C++->General->Additional Include Directories to point to the external dependencies.](docs/images/CPPGeneralIncludeDirectories.png "C++->General->Additional Include Directories")
+
+![Set the project properties->Linker->General->Additional Library Directories to point to the external dependencies.](docs/images/LinkerGeneralLibDirectories.png "Linker->General->Additional Library Directories")
