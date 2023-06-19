@@ -207,6 +207,7 @@ private:
 	std::vector<VkSemaphore> imageAvailableSemaphores{};
 	std::vector<VkSemaphore> renderFinishedSemaphores{};
 	std::vector<VkFence> inFlightFences{};
+	uint32_t currentFrame = 0;
 
 	void initWindow()
 	{
@@ -1049,30 +1050,30 @@ private:
 
 	void drawFrame()
 	{
-		vkWaitForFences(this->logicalDevice, 1, &this->inFlightFence, VK_TRUE, UINT64_MAX);
-		vkResetFences(this->logicalDevice, 1, &this->inFlightFence);
+		vkWaitForFences(this->logicalDevice, 1, &this->inFlightFences[this->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(this->logicalDevice, 1, &this->inFlightFences[this->currentFrame]);
 
 		uint32_t imageIndex = 0;
-		vkAcquireNextImageKHR(this->logicalDevice, this->swapChain, UINT64_MAX, this->imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+		vkAcquireNextImageKHR(this->logicalDevice, this->swapChain, UINT64_MAX, this->imageAvailableSemaphores[this->currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		vkResetCommandBuffer(this->commandBuffer, 0);
-		recordCommandBuffer(this->commandBuffer, imageIndex);
+		vkResetCommandBuffer(this->commandBuffers[this->currentFrame], 0);
+		recordCommandBuffer(this->commandBuffers[this->currentFrame], imageIndex);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-		VkSemaphore waitSemaphores[] = { this->imageAvailableSemaphore };
+		VkSemaphore waitSemaphores[] = { this->imageAvailableSemaphores[this->currentFrame]};
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &this->commandBuffer;
-		VkSemaphore signalSemaphores[] = { this->renderFinishedSemaphore };
+		submitInfo.pCommandBuffers = &this->commandBuffers[this->currentFrame];
+		VkSemaphore signalSemaphores[] = { this->renderFinishedSemaphores[this->currentFrame]};
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		if (vkQueueSubmit(this->graphicsQueue, 1, &submitInfo, this->inFlightFence) != VK_SUCCESS) 
+		if (vkQueueSubmit(this->graphicsQueue, 1, &submitInfo, this->inFlightFences[this->currentFrame]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -1089,6 +1090,8 @@ private:
 		presentInfo.pResults = nullptr; // Optional
 
 		vkQueuePresentKHR(this->presentQueue, &presentInfo);
+
+		this->currentFrame = (this->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void createSyncObjects()
