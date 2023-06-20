@@ -221,10 +221,13 @@ private:
 
 	const std::vector<Vertex> vertices = 
 	{
-		{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 	};
+
+	const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 
 	GLFWwindow* window = nullptr;
 	VkInstance instance = nullptr;
@@ -252,7 +255,8 @@ private:
 	bool framebufferResized = false;
 	VkBuffer vertexBuffer = nullptr;
 	VkDeviceMemory vertexBufferMemory = nullptr;
-
+	VkBuffer indexBuffer = nullptr;
+	VkDeviceMemory indexBufferMemory = nullptr;
 
 	void initWindow()
 	{
@@ -285,6 +289,7 @@ private:
 		this->createFrameBuffers();
 		this->createCommandPool();
 		this->createVertexBuffer();
+		this->createIndexBuffer();
 		this->createCommandBuffers();
 		this->createSyncObjects();
 	}
@@ -358,6 +363,10 @@ private:
 	void cleanup()
 	{
 		this->cleanupSwapChain();
+
+		vkDestroyBuffer(this->logicalDevice, this->indexBuffer, nullptr);
+
+		vkFreeMemory(this->logicalDevice, this->indexBufferMemory, nullptr);
 
 		vkDestroyBuffer(this->logicalDevice, this->vertexBuffer, nullptr);
 
@@ -1129,7 +1138,9 @@ private:
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(this->vertices.size()), 1, 0, 0);
+		vkCmdBindIndexBuffer(commandBuffer, this->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(this->indices.size()), 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -1247,6 +1258,27 @@ private:
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vertexBuffer, this->vertexBufferMemory);
 
 		copyBuffer(stagingBuffer, this->vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(this->logicalDevice, stagingBuffer, nullptr);
+		vkFreeMemory(this->logicalDevice, stagingBufferMemory, nullptr);
+	}
+
+	void createIndexBuffer()
+	{
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(this->logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, this->indices.data(), (size_t)bufferSize);
+		vkUnmapMemory(this->logicalDevice, stagingBufferMemory);
+
+		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->indexBuffer, this->indexBufferMemory);
+
+		copyBuffer(stagingBuffer, this->indexBuffer, bufferSize);
 
 		vkDestroyBuffer(this->logicalDevice, stagingBuffer, nullptr);
 		vkFreeMemory(this->logicalDevice, stagingBufferMemory, nullptr);
