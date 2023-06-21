@@ -2,7 +2,7 @@
 A demo of initializing Vulkan using GLFW as the windowing framework.
 This demo is created by following the tutorial at [Vulkan Tutorial](https://vulkan-tutorial.com/) by Alexander Overvoorde.
 
-![A triangle rendered using the Vulkan API and GLFW window.](docs/images/VulkanTriangle.png "The 1100 line triangle!")
+![A rectangle rendered using Vulkan and animated via the vertex shader.](docs/images/SpinningRectangle.gif "It spins now")
 
 ## Dependencies
 - [Vulkan SDK](https://vulkan.lunarg.com/)
