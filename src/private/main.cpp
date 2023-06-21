@@ -280,6 +280,8 @@ private:
 	std::vector<VkDescriptorSet> descriptorSets{};
 	VkImage textureImage = nullptr;
 	VkDeviceMemory textureImageMemory = nullptr;
+	VkImageView textureImageView = nullptr;
+	VkSampler textureSampler = nullptr;
 
 	void initWindow()
 	{
@@ -313,6 +315,8 @@ private:
 		this->createFrameBuffers();
 		this->createCommandPool();
 		this->createTextureImage();
+		this->createTextureImageView();
+		this->createTextureSampler();
 		this->createVertexBuffer();
 		this->createIndexBuffer();
 		this->createUniformBuffers();
@@ -349,6 +353,7 @@ private:
 		}
 
 		VkPhysicalDeviceFeatures deviceFeatures{};
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -391,6 +396,10 @@ private:
 	void cleanup()
 	{
 		this->cleanupSwapChain();
+
+		vkDestroySampler(this->logicalDevice, textureSampler, nullptr);
+
+		vkDestroyImageView(this->logicalDevice, this->textureImageView, nullptr);
 
 		vkDestroyImage(this->logicalDevice, textureImage, nullptr);
 
@@ -676,7 +685,10 @@ private:
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 		}
 
-		return indices.isComplete() && extensionsSupported && swapChainAdequate;
+		VkPhysicalDeviceFeatures supportedFeatures;
+		vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+		return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 	}
 
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device)
@@ -866,31 +878,35 @@ private:
 		this->swapChainExtent = extent;
 	}
 
-	void createImageViews()
+	VkImageView createImageView(VkImage image, VkFormat format)
 	{
-		this->swapChainImageViews.resize(swapChainImages.size());
+		VkImageViewCreateInfo viewInfo{};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image = image;
+		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format = format;
+		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
 
-		for (size_t i = 0; i < this->swapChainImages.size(); i++)
+		VkImageView imageView;
+		if (vkCreateImageView(this->logicalDevice, &viewInfo, nullptr, &imageView) != VK_SUCCESS) 
 		{
-			VkImageViewCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = this->swapChainImages[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = this->swapChainImageFormat;
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.subresourceRange.baseMipLevel = 0;
-			createInfo.subresourceRange.levelCount = 1;
-			createInfo.subresourceRange.baseArrayLayer = 0;
-			createInfo.subresourceRange.layerCount = 1;
+			throw std::runtime_error("Failed to create texture image view!");
+		}
 
-			if (vkCreateImageView(this->logicalDevice, &createInfo, nullptr, &this->swapChainImageViews[i]) != VK_SUCCESS) 
-			{
-				throw std::runtime_error("Failed to create image views!");
-			}
+		return imageView;
+	}
+
+	void createImageViews() 
+	{
+		this->swapChainImageViews.resize(this->swapChainImages.size());
+
+		for (uint32_t i = 0; i < this->swapChainImages.size(); i++) 
+		{
+			this->swapChainImageViews[i] = this->createImageView(this->swapChainImages[i], this->swapChainImageFormat);
 		}
 	}
 
@@ -1519,6 +1535,40 @@ private:
 		}
 
 		vkBindImageMemory(this->logicalDevice, image, imageMemory, 0);
+	}
+
+	void createTextureImageView()
+	{
+		textureImageView = this->createImageView(this->textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+	}
+
+	void createTextureSampler()
+	{
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(this->physicalDevice, &properties);
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		if (vkCreateSampler(this->logicalDevice, &samplerInfo, nullptr, &this->textureSampler) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create texture sampler!");
+		}
 	}
 
 	VkCommandBuffer beginSingleTimeCommands()
