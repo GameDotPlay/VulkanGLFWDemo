@@ -332,6 +332,17 @@ private:
 		this->createSyncObjects();
 	}
 
+	void mainLoop()
+	{
+		while (!glfwWindowShouldClose(this->window))
+		{
+			glfwPollEvents();
+			this->drawFrame();
+		}
+
+		vkDeviceWaitIdle(this->logicalDevice);
+	}
+
 	void createSurface()
 	{
 		if (glfwCreateWindowSurface(this->instance, this->window, nullptr, &this->surface) != VK_SUCCESS)
@@ -386,17 +397,6 @@ private:
 
 		vkGetDeviceQueue(this->logicalDevice, indicies.graphicsFamily.value(), 0, &graphicsQueue);
 		vkGetDeviceQueue(this->logicalDevice, indicies.presentFamily.value(), 0, &presentQueue);
-	}
-
-	void mainLoop()
-	{
-		while (!glfwWindowShouldClose(this->window))
-		{
-			glfwPollEvents();
-			this->drawFrame();
-		}
-
-		vkDeviceWaitIdle(this->logicalDevice);
 	}
 
 	void cleanup()
@@ -1233,13 +1233,13 @@ private:
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 
+		this->updateUniformBuffer(this->currentFrame);
+
 		// Only reset the fence if we are submitting work.
 		vkResetFences(this->logicalDevice, 1, &this->inFlightFences[this->currentFrame]);
 
 		vkResetCommandBuffer(this->commandBuffers[this->currentFrame], 0);
 		recordCommandBuffer(this->commandBuffers[this->currentFrame], imageIndex);
-
-		this->updateUniformBuffer(this->currentFrame);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1316,16 +1316,16 @@ private:
 		VkDeviceSize bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
 		vkMapMemory(this->logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, this->vertices.data(), (size_t)bufferSize);
 		vkUnmapMemory(this->logicalDevice, stagingBufferMemory);
 
-		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vertexBuffer, this->vertexBufferMemory);
+		this->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vertexBuffer, this->vertexBufferMemory);
 
-		copyBuffer(stagingBuffer, this->vertexBuffer, bufferSize);
+		this->copyBuffer(stagingBuffer, this->vertexBuffer, bufferSize);
 
 		vkDestroyBuffer(this->logicalDevice, stagingBuffer, nullptr);
 		vkFreeMemory(this->logicalDevice, stagingBufferMemory, nullptr);
@@ -1509,8 +1509,12 @@ private:
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-
 		this->createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(this->logicalDevice, stagingBufferMemory, 0, imageSize, 0, &data);
+		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		vkUnmapMemory(this->logicalDevice, stagingBufferMemory);
 
 		stbi_image_free(pixels);
 
@@ -1553,7 +1557,7 @@ private:
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+		allocInfo.memoryTypeIndex = this->findMemoryType(memRequirements.memoryTypeBits, properties);
 
 		if (vkAllocateMemory(this->logicalDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) 
 		{
@@ -1631,7 +1635,7 @@ private:
 
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) 
 	{
-		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+		VkCommandBuffer commandBuffer = this->beginSingleTimeCommands();
 
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1667,12 +1671,12 @@ private:
 		}
 		else 
 		{
-			throw std::invalid_argument("unsupported layout transition!");
+			throw std::invalid_argument("Unsupported layout transition!");
 		}
 
 		vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-		endSingleTimeCommands(commandBuffer);
+		this->endSingleTimeCommands(commandBuffer);
 	}
 
 	void updateUniformBuffer(uint32_t currentImage)
@@ -1684,9 +1688,7 @@ private:
 
 		UniformBufferObject ubo{};
 		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 		ubo.proj = glm::perspective(glm::radians(45.0f), this->swapChainExtent.width / (float)this->swapChainExtent.height, 0.1f, 10.0f);
 
 		ubo.proj[1][1] *= -1;
@@ -1707,7 +1709,7 @@ private:
 
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) 
 	{
-		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+		VkCommandBuffer commandBuffer = this->beginSingleTimeCommands();
 
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -1722,7 +1724,7 @@ private:
 
 		vkCmdCopyBufferToImage( commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-		endSingleTimeCommands(commandBuffer);
+		this->endSingleTimeCommands(commandBuffer);
 	}
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) 
