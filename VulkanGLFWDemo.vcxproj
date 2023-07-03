@@ -153,10 +153,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\private\main.cpp" />
+    <ClCompile Include="src\private\Renderer.cpp" />
+    <ClCompile Include="src\public\SwapChainSupportDetails.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\shader.frag" />
     <None Include="src\shaders\shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\public\QueueFamilyIndices.hpp" />
+    <ClInclude Include="src\public\Renderer.h" />
+    <ClInclude Include="src\public\UniformBufferObject.hpp" />
+    <ClInclude Include="src\public\Vertex.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
