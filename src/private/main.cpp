@@ -1,3 +1,5 @@
+#include "../public/Application.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -2089,7 +2091,7 @@ private:
 
 int main() 
 {
-	HelloTriangleApplication app;
+	Application app;
 
 	try 
 	{
