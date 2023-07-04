@@ -29,6 +29,15 @@ private:
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 	const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
+	const std::string MODEL_PATH = "src/mesh/viking_room.obj";
+	const std::string TEXTURE_PATH = "src/textures/viking_room.png";
+
+	const uint32_t WIDTH = 800;
+	const uint32_t HEIGHT = 600;
+
+	std::vector<Vertex> vertices{};
+	std::vector<uint32_t> indices{};
+
 	VkInstance instance = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkDevice logicalDevice = VK_NULL_HANDLE;
@@ -47,10 +56,28 @@ private:
 	VkImage depthImage = VK_NULL_HANDLE;
 	VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
 	VkImageView depthImageView = VK_NULL_HANDLE;
-
+	VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+	VkImageView textureImageView = VK_NULL_HANDLE;
+	VkSampler textureSampler = VK_NULL_HANDLE;
+	VkImage textureImage = VK_NULL_HANDLE;
+	VkBuffer vertexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+	VkBuffer indexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 
+	std::vector<VkSemaphore> imageAvailableSemaphores{};
+	std::vector<VkSemaphore> renderFinishedSemaphores{};
+	std::vector<VkFence> inFlightFences{};
+	uint32_t currentFrame = 0;
+	std::vector<VkCommandBuffer> commandBuffers{};
+	std::vector<VkDescriptorSet> descriptorSets{};
+	std::vector<VkBuffer> uniformBuffers{};
+	std::vector<VkDeviceMemory> uniformBuffersMemory{};
+	std::vector<void*> uniformBuffersMapped{};
+	std::vector<VkFramebuffer> swapChainFramebuffers{};
 	uint32_t mipLevels = 0;
 	std::vector<VkImage> swapChainImages{};
 	VkFormat swapChainImageFormat{};
@@ -58,6 +85,8 @@ private:
 	std::vector<VkImageView> swapChainImageViews{};
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
+	VkExtent2D currentExtent{};
+	
 	void createInstance(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions);
 	void setupDebugMessenger();
 	void pickPhysicalDevice();
@@ -86,6 +115,12 @@ private:
 
 	void cleanup();
 	
+	void cleanupSwapChain();
+	void recreateSwapChain();
+	void generateMipMaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	bool hasStencilComponent(VkFormat format);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
