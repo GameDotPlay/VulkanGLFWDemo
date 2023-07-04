@@ -72,12 +72,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)\bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)\out\$(Configuration)\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)\bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)\out\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)\bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)\out\$(Configuration)\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)\bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)\out\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -85,7 +85,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include\glm;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -103,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include\glm;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -121,7 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include\glm;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include\glm;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev\Lib\tinyobjloader;C:\Dev\Lib\stb;C:\Dev\Lib\glfw-3.3.8.bin.WIN64\include;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -154,19 +154,13 @@
   <ItemGroup>
     <ClCompile Include="src\private\Application.cpp" />
     <ClCompile Include="src\private\main.cpp" />
-    <ClCompile Include="src\private\Renderer.cpp" />
-    <ClCompile Include="src\public\SwapChainSupportDetails.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\shader.frag" />
-    <None Include="src\shaders\shader.vert" />
+    <None Include="assets\shaders\shader.frag" />
+    <None Include="assets\shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\public\Application.h" />
-    <ClInclude Include="src\public\QueueFamilyIndices.hpp" />
-    <ClInclude Include="src\public\Renderer.h" />
-    <ClInclude Include="src\public\UniformBufferObject.hpp" />
-    <ClInclude Include="src\public\Vertex.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

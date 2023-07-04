@@ -30,8 +30,12 @@
 #include "../public/Vertex.hpp"
 #include "../public/UniformBufferObject.hpp"
 
-Renderer::Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const VkExtent2D extents)
+Renderer::Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const uint32_t width, const uint32_t height)
 {
+	VkExtent2D extents{};
+	extents.width = width;
+	extents.height = height;
+
 	this->init(appName, engineName, requiredExtensions, extents);
 }
 
@@ -479,8 +483,8 @@ void Renderer::createDescriptorSetLayout()
 
 void Renderer::createGraphicsPipeline()
 {
-	auto vertShaderCode = this->readFile("src/shaders/vert.spv");
-	auto fragShaderCode = this->readFile("src/shaders/frag.spv");
+	auto vertShaderCode = this->readFile("../assets/shaders/vert.spv");
+	auto fragShaderCode = this->readFile("../assets/shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = this->createShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = this->createShaderModule(fragShaderCode);

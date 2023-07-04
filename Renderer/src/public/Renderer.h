@@ -1,19 +1,20 @@
 #pragma once
 
 #define K_USE_PLATFORM_ANDROID_KHR
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 #include <vector>
 #include <string>
 
 struct QueueFamilyIndices;
 struct SwapChainSupportDetails;
+struct Vertex;
 
 class Renderer
 {
 public:
-	Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const VkExtent2D extents);
-	void init(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const VkExtent2D extents);
+	Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const uint32_t width, const uint32_t height);
+	
 	void setSurface(VkSurfaceKHR surface);
 	~Renderer();
 
@@ -29,8 +30,8 @@ private:
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 	const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-	const std::string MODEL_PATH = "src/mesh/viking_room.obj";
-	const std::string TEXTURE_PATH = "src/textures/viking_room.png";
+	const std::string MODEL_PATH = "../assets/mesh/viking_room.obj";
+	const std::string TEXTURE_PATH = "../assets/textures/viking_room.png";
 
 	const uint32_t WIDTH = 800;
 	const uint32_t HEIGHT = 600;
@@ -87,6 +88,7 @@ private:
 
 	VkExtent2D currentExtent{};
 	
+	void init(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const VkExtent2D extents);
 	void createInstance(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions);
 	void setupDebugMessenger();
 	void pickPhysicalDevice();

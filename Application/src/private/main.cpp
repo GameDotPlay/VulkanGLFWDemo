@@ -33,8 +33,8 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const std::string MODEL_PATH = "src/mesh/viking_room.obj";
-const std::string TEXTURE_PATH = "src/textures/viking_room.png";
+const std::string MODEL_PATH = "../assets/mesh/viking_room.obj";
+const std::string TEXTURE_PATH = "../assets/textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -960,8 +960,8 @@ private:
 
 	void createGraphicsPipeline()
 	{
-		auto vertShaderCode = this->readFile("src/shaders/vert.spv");
-		auto fragShaderCode = this->readFile("src/shaders/frag.spv");
+		auto vertShaderCode = this->readFile("../assets/shaders/vert.spv");
+		auto fragShaderCode = this->readFile("../assets/shaders/frag.spv");
 
 		VkShaderModule vertShaderModule = this->createShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = this->createShaderModule(fragShaderCode);
@@ -2091,7 +2091,11 @@ private:
 
 int main() 
 {
-	Application app;
+	const std::string appName = "Renderer Test";
+	const std::string engineName = "Rufus";
+	const std::string 
+
+	Application app(appName, engineName, )
 
 	try 
 	{
