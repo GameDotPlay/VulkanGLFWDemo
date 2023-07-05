@@ -30,16 +30,13 @@
 #include "../public/Vertex.hpp"
 #include "../public/UniformBufferObject.hpp"
 
-Renderer::Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const uint32_t width, const uint32_t height)
+Renderer::Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions)
 {
-	VkExtent2D extents{};
-	extents.width = width;
-	extents.height = height;
-
-	this->init(appName, engineName, requiredExtensions, extents);
+	this->createInstance(appName, engineName, requiredExtensions);
+	this->setupDebugMessenger();
 }
 
-void Renderer::init(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const VkExtent2D extents)
+void Renderer::init(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions)
 {
 	this->createInstance(appName, engineName, requiredExtensions);
 	this->setupDebugMessenger();

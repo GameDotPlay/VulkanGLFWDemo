@@ -13,9 +13,10 @@ struct Vertex;
 class Renderer
 {
 public:
-	Renderer(const std::string appName, const std::string engineName, std::vector<const char*> requiredExtensions, const uint32_t width, const uint32_t height);
+	Renderer(const std::string& appName, const std::string& engineName, std::vector<const char*> requiredExtensions);
 	
 	void setSurface(VkSurfaceKHR surface);
+	VkInstance getInstance();
 	~Renderer();
 
 private:
