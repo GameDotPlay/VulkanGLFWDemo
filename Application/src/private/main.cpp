@@ -2093,9 +2093,8 @@ int main()
 {
 	const std::string appName = "Renderer Test";
 	const std::string engineName = "Rufus";
-	const std::string 
 
-	Application app(appName, engineName, )
+	Application app(appName, engineName);
 
 	try 
 	{
