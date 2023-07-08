@@ -31,6 +31,7 @@ void Renderer::init(const std::string& appName, const std::string& engineName, c
 	extents.height = height;
 
 	this->createInstance(appName, engineName, requiredExtensions);
+	this->pickPhysicalDevice();
 }
 
 Renderer::~Renderer()
@@ -72,6 +73,27 @@ void Renderer::createInstance(const std::string appName, const std::string engin
 	if (vkCreateInstance(&createInfo, nullptr, &this->instance) != VK_SUCCESS) 
 	{
 		throw std::runtime_error("Failed to create instance!");
+	}
+}
+
+void Renderer::pickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(this->instance, &deviceCount, nullptr);
+
+	if (deviceCount == 0) 
+	{
+		throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+	}
+
+	std::vector<VkPhysicalDevice> devices = {};
+	vkEnumeratePhysicalDevices(this->instance, &deviceCount, devices.data());
+
+	// If there's only one compatible device just pick it.
+	if (deviceCount == 1)
+	{
+		this->physicalDevice = devices[0];
+		return;
 	}
 }
 
