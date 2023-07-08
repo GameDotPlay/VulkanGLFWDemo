@@ -1,5 +1,5 @@
-#include "../public/Application.h"
-#include "../../../Renderer/src/public/Renderer.h"
+#include "Application.h"
+#include "Renderer.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
@@ -41,13 +41,9 @@ void Application::initWindow()
 
 void Application::initRenderer()
 {
-	this->initVulkan();
-}
-
-void Application::initVulkan()
-{
 	std::vector<const char*> extensions = this->getRequiredExtensions();
-	this->renderer = new Renderer(this->appName, this->engineName, extensions);
+	this->renderer = new Renderer();
+	this->renderer->init(this->appName, this->engineName, extensions, this->windowWidth, this->windowHeight);
 
 	if (this->renderer->getInstance() == VK_NULL_HANDLE)
 	{

@@ -16,14 +16,6 @@ public:
 
 private:
 
-	struct VulkanInstanceInitInfo
-	{
-		const char* applicationName;
-		const char* engineName;
-		uint32_t extensionCount;
-		const char** requiredExtensions;
-	};
-
 	GLFWwindow* window = nullptr;
 	Renderer* renderer = nullptr;
 
@@ -35,7 +27,6 @@ private:
 
 	void initWindow();
 	void initRenderer();
-	void initVulkan();
 	void mainLoop();
 
 	std::vector<const char*> getRequiredExtensions();

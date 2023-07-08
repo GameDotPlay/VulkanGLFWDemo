@@ -1,5 +1,4 @@
-#include "../public/Application.h"
-
+/*
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -2088,6 +2087,11 @@ private:
 		return VK_FALSE;
 	}
 };
+*/
+
+#include "Application.h"
+#include <iostream>
+#include <cstdlib>
 
 int main() 
 {
